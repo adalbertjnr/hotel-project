@@ -1,1 +1,3 @@
 **/bin/*
+
+api/user_handler_test.go
