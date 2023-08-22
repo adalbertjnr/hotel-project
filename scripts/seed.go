@@ -7,24 +7,23 @@ import (
 
 	"github.com/souzagmu/hotel-project/db"
 	"github.com/souzagmu/hotel-project/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func main() {
-	ctx := context.Background()
+var (
+	client     *mongo.Client
+	roomStore  db.RoomStore
+	hotelStore db.HotelStore
+	ctx        = context.Background()
+)
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DBURI))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	hotelStore := db.NewMongoHotelStore(client, db.DBNAME)
-	roomStore := db.NewMongoRoomStore(client, db.DBNAME)
-
+func seedHotel(name, location string) error {
 	hotel := types.Hotel{
-		Name:     "Bellucia",
-		Location: "France",
+		Name:     name,
+		Location: location,
+		Rooms:    []primitive.ObjectID{},
 	}
 
 	rooms := []types.Room{
@@ -42,17 +41,38 @@ func main() {
 		},
 	}
 
+	// Insere o hotel no banco e retorna o ID da inserção no banco
 	insertedHotel, err := hotelStore.InsertHotel(ctx, &hotel)
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// Utiliza o ID gerado do hotel acima e o adiciona para cada quarto por causa da estrutura do quarto que possui o ID do hotel
 	for _, room := range rooms {
 		room.HotelID = insertedHotel.ID
 		insertedRoom, err := roomStore.InsertRoom(ctx, &room)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("insertedRoom:", insertedRoom)
+		fmt.Printf("insertedRoom: %v", insertedRoom)
 	}
+	return nil
+}
+
+func main() {
+	seedHotel("Bellucia", "France")
+	seedHotel("The cozy hotel", "Netherlands")
+	seedHotel("5 Star hotel", "Germany")
+}
+
+func init() {
+	var err error
+	client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DBURI))
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := client.Database(db.DBNAME).Drop(ctx); err != nil {
+		log.Fatal(err)
+	}
+	hotelStore = db.NewMongoHotelStore(client)
+	roomStore = db.NewMongoRoomStore(client, hotelStore)
 }
