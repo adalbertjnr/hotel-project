@@ -5,10 +5,11 @@ import (
 	"flag"
 	"log"
 
+	"github.com/adalbertjnr/hotel-project/api"
+	"github.com/adalbertjnr/hotel-project/db"
+	"github.com/adalbertjnr/hotel-project/middleware"
 	"github.com/gofiber/fiber/v2"
-	"github.com/souzagmu/hotel-project/api"
-	"github.com/souzagmu/hotel-project/db"
-	"github.com/souzagmu/hotel-project/middleware"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -26,6 +27,12 @@ var config = fiber.Config{
 }
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	listenAddr := flag.String("listenAddr", ":5000", "Listen Address")
 	flag.Parse()
 
