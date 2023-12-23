@@ -1,10 +1,11 @@
-module github.com/souzagmu/hotel-project
+module github.com/adalbertjnr/hotel-project
 
 go 1.20
 
 require (
 	github.com/gofiber/fiber/v2 v2.48.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.12.0
 )
 
