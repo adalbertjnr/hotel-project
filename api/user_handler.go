@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/adalbertjnr/hotel-project/db"
+	"github.com/adalbertjnr/hotel-project/types"
 	"github.com/gofiber/fiber/v2"
-	"github.com/souzagmu/hotel-project/db"
-	"github.com/souzagmu/hotel-project/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

@@ -1,8 +1,8 @@
 package api
 
 import (
+	"github.com/adalbertjnr/hotel-project/db"
 	"github.com/gofiber/fiber/v2"
-	"github.com/souzagmu/hotel-project/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
