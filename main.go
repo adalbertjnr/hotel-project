@@ -44,7 +44,7 @@ func main() {
 	var (
 		hotelStore = db.NewMongoHotelStore(client)
 		roomStore  = db.NewMongoRoomStore(client, hotelStore)
-		userStore  = db.NewMongoUserStore(client)
+		userStore  = db.NewMongoUserStore(client, dbname)
 		store      = &db.Store{
 			User:  userStore,
 			Hotel: hotelStore,
@@ -73,6 +73,6 @@ func main() {
 	apiv1.Get("/hotel/:id", hotelHandler.HandleGetHotel)
 	apiv1.Get("/hotel/:id/rooms", hotelHandler.HandleGetRooms)
 
-	app.Listen(*listenAddr)
+	log.Fatal(app.Listen(*listenAddr))
 
 }
