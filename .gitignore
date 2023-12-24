@@ -1,3 +1,2 @@
 **/bin/*
 .env
-api/user_handler_test.go
