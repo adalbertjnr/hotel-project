@@ -8,4 +8,4 @@ seed:
 	@go run scripts/seed.go
 
 test:
-	@go test -v .
+	@go test -v ./api
