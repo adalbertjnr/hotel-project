@@ -14,7 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func insertUser(t *testing.T, userStore db.UserStore) *types.User {
+func insertUser(t *testing.T, userStore db.UserStorer) *types.User {
 	user, err := types.NewUserFromParams(types.CreateUserParams{
 		FirstName: "james",
 		LastName:  "foo",
@@ -34,10 +34,10 @@ func insertUser(t *testing.T, userStore db.UserStore) *types.User {
 func TestAuthenticateWithWrongPassword(t *testing.T) {
 	tdb := setup(t)
 	defer tdb.teardown(t)
-	insertUser(t, tdb.UserStore)
+	insertUser(t, tdb.UserStorer)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.UserStore)
+	authHandler := NewAuthHandler(tdb.UserStorer)
 	app.Post("/auth", authHandler.HandleAuthenticate)
 
 	authParams := AuthParams{
@@ -71,10 +71,10 @@ func TestAuthenticateWithWrongPassword(t *testing.T) {
 func TestAuthenticateSuccess(t *testing.T) {
 	tdb := setup(t)
 	defer tdb.teardown(t)
-	insertedUserEncpw := insertUser(t, tdb.UserStore)
+	insertedUserEncpw := insertUser(t, tdb.UserStorer)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.UserStore)
+	authHandler := NewAuthHandler(tdb.UserStorer)
 	app.Post("/auth", authHandler.HandleAuthenticate)
 
 	authParams := AuthParams{

@@ -14,10 +14,10 @@ import (
 )
 
 type AuthHandler struct {
-	userStore db.UserStore
+	userStore db.UserStorer
 }
 
-func NewAuthHandler(userStore db.UserStore) *AuthHandler {
+func NewAuthHandler(userStore db.UserStorer) *AuthHandler {
 	return &AuthHandler{
 		userStore: userStore,
 	}
