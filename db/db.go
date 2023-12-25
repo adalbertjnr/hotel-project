@@ -9,7 +9,7 @@ const (
 )
 
 type Store struct {
-	User  UserStore
-	Hotel HotelStore
-	Room  RoomStore
+	User  UserStorer
+	Hotel HotelStorer
+	Room  RoomStorer
 }

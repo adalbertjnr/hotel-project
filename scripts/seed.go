@@ -14,9 +14,9 @@ import (
 
 var (
 	client     *mongo.Client
-	roomStore  db.RoomStore
-	hotelStore db.HotelStore
-	userStore  db.UserStore
+	roomStore  db.RoomStorer
+	hotelStore db.HotelStorer
+	userStore  db.UserStorer
 	ctx        = context.Background()
 )
 

@@ -14,7 +14,7 @@ type Dropper interface {
 	Drop(context.Context) error
 }
 
-type UserStore interface {
+type UserStorer interface {
 	Dropper
 	GetUserByID(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)

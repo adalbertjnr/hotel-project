@@ -13,10 +13,10 @@ import (
 )
 
 type UserHandler struct {
-	userStore db.UserStore
+	userStore db.UserStorer
 }
 
-func NewUserHandler(userStore db.UserStore) *UserHandler {
+func NewUserHandler(userStore db.UserStorer) *UserHandler {
 	return &UserHandler{
 		userStore: userStore,
 	}
