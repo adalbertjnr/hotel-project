@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -35,6 +36,14 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 	}
 }
 
+func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
+	rooms, err := h.store.Room.GetRooms(c.Context(), bson.M{})
+	if err != nil {
+		return err
+	}
+	return c.JSON(rooms)
+}
+
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	var params BookRoomParams
 	if err := c.BodyParser(&params); err != nil {
@@ -55,24 +64,10 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		})
 	}
 
-	where := bson.M{
-		"fromDate": bson.M{
-			"$gte": params.FromDate,
-		},
-		"tillDate": bson.M{
-			"$lte": params.TillDate,
-		},
-	}
-
-	bookings, err := h.store.Booking.GetBookings(c.Context(), where)
-	if err != nil {
-		return err
-	}
-
-	if len(bookings) > 0 {
+	if ok, err := h.isRoomAvailable(c.Context(), roomOID, params); !ok || err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(genericResp{
 			Type:    "error",
-			Message: fmt.Sprintf("room %s already booked", roomOID),
+			Message: fmt.Sprintf("room %s already booked", roomOID.String()),
 		})
 	}
 
@@ -91,4 +86,26 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		})
 	}
 	return c.JSON(insertedBooking)
+}
+
+func (h *RoomHandler) isRoomAvailable(ctx context.Context, roomOID primitive.ObjectID, params BookRoomParams) (bool, error) {
+	where := bson.M{
+		"roomID": roomOID,
+		"fromDate": bson.M{
+			"$gte": params.FromDate,
+		},
+		"tillDate": bson.M{
+			"$lte": params.TillDate,
+		},
+	}
+
+	bookings, err := h.store.Booking.GetBookings(ctx, where)
+	if err != nil {
+		return false, err
+	}
+
+	ok := len(bookings) == 0
+
+	return ok, nil
+
 }
