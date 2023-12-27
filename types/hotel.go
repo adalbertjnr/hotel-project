@@ -4,13 +4,6 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type RoomType int
 
-const (
-	SingleRoomType RoomType = iota + 1
-	DoubleRoomType
-	SeaSideRoomType
-	DeluxeRoomType
-)
-
 type Hotel struct {
 	ID       primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
 	Name     string               `bson:"name" json:"name"`
