@@ -64,12 +64,12 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 
 	resp := AuthResponse{
 		User:  user,
-		Token: createTokenFromUser(user),
+		Token: CreateTokenFromUser(user),
 	}
 	return c.JSON(resp)
 }
 
-func createTokenFromUser(user *types.User) string {
+func CreateTokenFromUser(user *types.User, seedToken ...string) string {
 	now := time.Now()
 	expires := now.Add(time.Hour * 4).Unix()
 	claims := jwt.MapClaims{
@@ -80,7 +80,11 @@ func createTokenFromUser(user *types.User) string {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if len(seedToken) == 0 {
+		seedToken[0] = os.Getenv("JWT_SECRET")
+	}
+
+	tokenString, err := token.SignedString([]byte(seedToken[0]))
 	if err != nil {
 		fmt.Println("failed to sign with secret", err)
 	}
