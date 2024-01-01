@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/adalbertjnr/hotel-project/api"
 	"github.com/adalbertjnr/hotel-project/db"
 	"github.com/adalbertjnr/hotel-project/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,14 +15,15 @@ import (
 )
 
 var (
-	client     *mongo.Client
-	roomStore  db.RoomStorer
-	hotelStore db.HotelStorer
-	userStore  db.UserStorer
-	ctx        = context.Background()
+	client       *mongo.Client
+	roomStore    db.RoomStorer
+	hotelStore   db.HotelStorer
+	userStore    db.UserStorer
+	bookingStore db.BookingStorer
+	ctx          = context.Background()
 )
 
-func seedUser(fname, lname, email, password string, isAdmin bool) {
+func seedUser(fname, lname, email, password string, isAdmin bool) *types.User {
 	user, err := types.NewUserFromParams(types.CreateUserParams{
 		Email:     email,
 		FirstName: fname,
@@ -31,13 +34,46 @@ func seedUser(fname, lname, email, password string, isAdmin bool) {
 		log.Fatal(err)
 	}
 	user.IsAdmin = isAdmin
-	_, err = userStore.InsertUser(ctx, user)
+	insertedUser, err := userStore.InsertUser(ctx, user)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("seeding user -> %s %s\n", user.Email, api.CreateTokenFromUser(user, "5as4c56as4d654as569C8AS908"))
+	return insertedUser
 }
 
-func seedHotel(name, location string, rating int) error {
+func seedRoom(size string, ss bool, price float64, hotelID primitive.ObjectID) *types.Room {
+	rooms := &types.Room{
+		Size:    size,
+		Seaside: ss,
+		Price:   price,
+		HotelID: hotelID,
+	}
+	insertedRoom, err := roomStore.InsertRoom(context.TODO(), rooms)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("seeding room ->", insertedRoom)
+	return insertedRoom
+}
+
+func seedBooking(userID, roomID primitive.ObjectID, numPersons int, fromDate, untilDate time.Time, canceled bool) {
+	booking := &types.Booking{
+		UserID:     userID,
+		RoomID:     roomID,
+		NumPersons: numPersons,
+		FromDate:   fromDate,
+		Tilldate:   untilDate,
+		Canceled:   canceled,
+	}
+
+	if _, err := bookingStore.InsertBooking(context.TODO(), booking); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("seed booking ->", booking)
+}
+
+func seedHotel(name, location string, rating int) *types.Hotel {
 	hotel := types.Hotel{
 		Name:     name,
 		Location: location,
@@ -45,44 +81,24 @@ func seedHotel(name, location string, rating int) error {
 		Rating:   rating,
 	}
 
-	rooms := []types.Room{
-		{
-			Size:  "small",
-			Price: 99.9,
-		},
-		{
-			Size:  "kingsize",
-			Price: 199.9,
-		},
-		{
-			Size:  "normal",
-			Price: 122.9,
-		},
-	}
-
-	// Insere o hotel no banco e retorna o ID da inserção no banco
 	insertedHotel, err := hotelStore.InsertHotel(ctx, &hotel)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Utiliza o ID gerado do hotel acima e o adiciona para cada quarto por causa da estrutura do quarto que possui o ID do hotel
-	for _, room := range rooms {
-		room.HotelID = insertedHotel.ID
-		insertedRoom, err := roomStore.InsertRoom(ctx, &room)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("insertedRoom: %v", insertedRoom)
-	}
-	return nil
+	fmt.Println("seeding hotel ->", insertedHotel)
+	return insertedHotel
 }
 
 func main() {
+	james := seedUser("james", "foo", "james@foo.com", "password", false)
+	seedUser("admin", "admin", "admin@foo.com", "adminpassword", true)
 	seedHotel("Bellucia", "France", 3)
 	seedHotel("The cozy hotel", "Netherlands", 4)
-	seedHotel("5 Star hotel", "Germany", 5)
-	seedUser("james", "foo", "james@foo.com", "password", false)
-	seedUser("admin", "admin", "admin@foo.com", "adminpassword", true)
+	gH := seedHotel("5 Star hotel", "Germany", 5)
+	seedRoom("small", true, 89.99, gH.ID)
+	seedRoom("medium", true, 189.99, gH.ID)
+	room := seedRoom("large", true, 289.99, gH.ID)
+	seedBooking(james.ID, room.ID, 2, time.Now(), time.Now().AddDate(0, 0, 2), false)
 }
 
 func init() {
@@ -97,4 +113,5 @@ func init() {
 	hotelStore = db.NewMongoHotelStore(client)
 	roomStore = db.NewMongoRoomStore(client, hotelStore)
 	userStore = db.NewMongoUserStore(client, db.DBNAME)
+	bookingStore = db.NewMongoBookingStore(client)
 }
