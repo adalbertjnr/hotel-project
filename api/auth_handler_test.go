@@ -2,42 +2,24 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
-	"github.com/adalbertjnr/hotel-project/db"
-	"github.com/adalbertjnr/hotel-project/types"
+	"github.com/adalbertjnr/hotel-project/db/fixtures"
 	"github.com/gofiber/fiber/v2"
 )
-
-func insertUser(t *testing.T, userStore db.UserStorer) *types.User {
-	user, err := types.NewUserFromParams(types.CreateUserParams{
-		FirstName: "james",
-		LastName:  "foo",
-		Email:     "james@foo.com",
-		Password:  "password",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	newUserWithEncpw, err := userStore.InsertUser(context.TODO(), user)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return newUserWithEncpw
-}
 
 func TestAuthenticateWithWrongPassword(t *testing.T) {
 	tdb := setup(t)
 	defer tdb.teardown(t)
-	insertUser(t, tdb.UserStorer)
+	fixtures.AddUser(&tdb.Store, "james", "foo", false)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.UserStorer)
+	authHandler := NewAuthHandler(tdb.User)
 	app.Post("/auth", authHandler.HandleAuthenticate)
 
 	authParams := AuthParams{
@@ -71,15 +53,15 @@ func TestAuthenticateWithWrongPassword(t *testing.T) {
 func TestAuthenticateSuccess(t *testing.T) {
 	tdb := setup(t)
 	defer tdb.teardown(t)
-	insertedUserEncpw := insertUser(t, tdb.UserStorer)
+	insertedUserEncpw := fixtures.AddUser(&tdb.Store, "james", "foo", false)
 
 	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.UserStorer)
+	authHandler := NewAuthHandler(tdb.User)
 	app.Post("/auth", authHandler.HandleAuthenticate)
 
 	authParams := AuthParams{
 		Email:    "james@foo.com",
-		Password: "password",
+		Password: "james_foo",
 	}
 
 	b, _ := json.Marshal(authParams)
@@ -99,6 +81,7 @@ func TestAuthenticateSuccess(t *testing.T) {
 	if authResp.Token == "" {
 		t.Fatal()
 	}
+
 	//set encpw empty because the types.User do not return encpw field as json
 	//when try to compare they do not match and the test fail
 	//insertedUser has the encpw because of the func insertUser(t, tdb.UserStore) returns it
@@ -107,6 +90,9 @@ func TestAuthenticateSuccess(t *testing.T) {
 	//fmt.Println(insertedUserEncpw)
 	//fmt.Println(authResp.User)
 	insertedUserEncpw.EncryptedPassword = ""
+
+	fmt.Println(insertedUserEncpw)
+	fmt.Println(authResp.User)
 	if !reflect.DeepEqual(insertedUserEncpw, authResp.User) {
 		t.Fatal("struct field values not equal")
 	}
