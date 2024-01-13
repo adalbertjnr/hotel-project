@@ -15,9 +15,8 @@ import (
 )
 
 const (
-	dburi    = "mongodb://root:example@localhost:27017"
-	dbname   = "hotel-project"
-	userColl = "users"
+	DBURI  = "mongodb://root:example@localhost:27017"
+	DBNAME = "hotel-project"
 )
 
 var config = fiber.Config{
@@ -36,16 +35,16 @@ func main() {
 	listenAddr := flag.String("listenAddr", ":5000", "Listen Address")
 	flag.Parse()
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(dburi))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(DBURI))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var (
-		hotelStore   = db.NewMongoHotelStore(client)
-		roomStore    = db.NewMongoRoomStore(client, hotelStore)
-		userStore    = db.NewMongoUserStore(client, dbname)
-		bookingStore = db.NewMongoBookingStore(client)
+		hotelStore   = db.NewMongoHotelStore(client, DBNAME)
+		roomStore    = db.NewMongoRoomStore(client, hotelStore, DBNAME)
+		userStore    = db.NewMongoUserStore(client, DBNAME)
+		bookingStore = db.NewMongoBookingStore(client, DBNAME)
 		store        = &db.Store{
 			User:    userStore,
 			Hotel:   hotelStore,

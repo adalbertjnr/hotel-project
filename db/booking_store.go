@@ -21,7 +21,7 @@ type MongoBookingStore struct {
 	coll   *mongo.Collection
 }
 
-func NewMongoBookingStore(client *mongo.Client) *MongoBookingStore {
+func NewMongoBookingStore(client *mongo.Client, DBNAME string) *MongoBookingStore {
 	return &MongoBookingStore{
 		client: client,
 		coll:   client.Database(DBNAME).Collection(COLL_BOOKINGS),
