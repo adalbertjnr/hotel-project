@@ -5,8 +5,8 @@ const (
 	COLL_USER     = "users"
 	COLL_HOTEL    = "hotels"
 	COLL_BOOKINGS = "bookings"
-	DBNAME        = "hotel-project"
 	DBURI         = "mongodb://root:example@localhost:27017"
+	DBNAME        = "hotel-project"
 )
 
 type Store struct {

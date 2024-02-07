@@ -2,50 +2,20 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"log"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/adalbertjnr/hotel-project/db"
 	"github.com/adalbertjnr/hotel-project/types"
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-const (
-	testdburi = "mongodb://root:example@localhost:27017"
-	dbname    = "hotel-reservation-test"
-)
-
-type testdb struct {
-	db.UserStorer
-}
-
-func (tdb *testdb) teardown(t *testing.T) {
-	if err := tdb.UserStorer.Drop(context.TODO()); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func setup(t *testing.T) *testdb {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(testdburi))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &testdb{
-		UserStorer: db.NewMongoUserStore(client, dbname),
-	}
-}
 
 func TestPostUser(t *testing.T) {
 	tdb := setup(t)
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	userHandler := NewUserHandler(tdb.UserStorer)
+	userHandler := NewUserHandler(tdb.User)
 	app.Post("/", userHandler.HandlePostUser)
 
 	params := types.CreateUserParams{
@@ -68,6 +38,7 @@ func TestPostUser(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	if len(user.ID) == 0 {
 		t.Error("user id not set")
 	}

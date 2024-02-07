@@ -3,7 +3,6 @@ package api
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/adalbertjnr/hotel-project/db"
@@ -50,6 +49,7 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 	if err := c.BodyParser(&params); err != nil {
 		return err
 	}
+
 	user, err := h.userStore.GetUserByEmail(c.Context(), params.Email)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -66,10 +66,12 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 		User:  user,
 		Token: CreateTokenFromUser(user),
 	}
+
 	return c.JSON(resp)
 }
 
-func CreateTokenFromUser(user *types.User, seedToken ...string) string {
+func CreateTokenFromUser(user *types.User) string {
+	tokenByte := "5as4c56as4d654as569C8AS908"
 	now := time.Now()
 	expires := now.Add(time.Hour * 4).Unix()
 	claims := jwt.MapClaims{
@@ -80,11 +82,7 @@ func CreateTokenFromUser(user *types.User, seedToken ...string) string {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	if len(seedToken) == 0 {
-		seedToken[0] = os.Getenv("JWT_SECRET")
-	}
-
-	tokenString, err := token.SignedString([]byte(seedToken[0]))
+	tokenString, err := token.SignedString([]byte(tokenByte))
 	if err != nil {
 		fmt.Println("failed to sign with secret", err)
 	}
